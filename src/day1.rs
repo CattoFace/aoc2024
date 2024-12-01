@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    simd::{num::SimdUint, u32x8, u8x8},
+    simd::{num::SimdUint, u32x4, u8x4},
 };
 
 use crate::util::fast_parse;
@@ -19,10 +19,7 @@ use aoc_runner_derive::aoc;
 fn part1_solve(mut left: Vec<u32>, mut right: Vec<u32>) -> u32 {
     left.sort_unstable();
     right.sort_unstable();
-    left.iter()
-        .zip(right)
-        .map(|(&l, r)| (l as i32 - r as i32).abs())
-        .sum::<i32>() as u32
+    left.iter().zip(right).map(|(&l, r)| l.abs_diff(r)).sum()
 }
 
 // #[aoc(day1, part1, nom)]
@@ -74,13 +71,14 @@ pub fn part1_universal(mut input: &[u8]) -> u32 {
     part1_solve(left_col, right_col)
 }
 fn parse_line_simd(line: &[u8]) -> (u32, u32) {
-    const WEIGHTS: u32x8 = u32x8::from_slice(&[10000u32, 1000u32, 100u32, 10u32, 1u32, 0, 0, 0]);
-    const ZERO: u32x8 = u32x8::from_slice(&[b'0' as u32; 8]);
-    let left_simd: u32x8 = u8x8::load_or_default(&line[..5]).cast();
-    let right_simd: u32x8 = u8x8::load_or_default(&line[8..13]).cast();
+    assert!(line.len() >= 13);
+    const WEIGHTS: u32x4 = u32x4::from_slice(&[10000u32, 1000u32, 100u32, 10u32]);
+    const ZERO: u32x4 = u32x4::from_slice(&[b'0' as u32; 8]);
+    let left_simd: u32x4 = u8x4::load_or_default(&line[..4]).cast();
+    let right_simd: u32x4 = u8x4::load_or_default(&line[8..12]).cast();
     (
-        ((left_simd - ZERO) * WEIGHTS).reduce_sum(),
-        ((right_simd - ZERO) * WEIGHTS).reduce_sum(),
+        ((left_simd - ZERO) * WEIGHTS).reduce_sum() + (line[4] - b'0') as u32,
+        ((right_simd - ZERO) * WEIGHTS).reduce_sum() + (line[12] - b'0') as u32,
     )
 }
 fn parse_line_fast(line: &[u8]) -> (u32, u32) {
@@ -104,7 +102,7 @@ pub fn part1_fast(input: &[u8]) -> u32 {
     part1_solve(left_col, right_col)
 }
 pub fn part1(input: &str) -> u32 {
-    part1_fast(input.as_bytes())
+    part1_simd(input.as_bytes())
 }
 #[aoc(day1, part1, simd)]
 // parsing the input optimised for the real input shape
@@ -171,22 +169,22 @@ pub fn part2_fast(input: &[u8]) -> u32 {
         .sum()
 }
 pub fn part2(input: &str) -> u32 {
-    part2_fast(input.as_bytes())
+    part2_simd(input.as_bytes())
 }
 // parsing the input optimised for the real input shape using SIMD
 #[aoc(day1, part2, simd)]
 pub fn part2_simd(input: &[u8]) -> u32 {
-    let mut left_col = Vec::<u32>::new();
-    let mut right_col =
-        fxhash::FxHashMap::<u32, u16>::with_capacity_and_hasher(1000, Default::default());
+    let mut left_col = Vec::<u32>::with_capacity(1000);
+    // all numbers are 10000-99999
+    let mut right_col = [0u8; 90_000];
     input.chunks(14).for_each(|line| {
         let (l, r) = parse_line_simd(line);
         left_col.push(l);
-        right_col.entry(r).and_modify(|r| *r += 1).or_insert(1);
+        right_col[(r - 10000) as usize] += 1;
     });
     left_col
-        .iter()
-        .map(|num| num * *right_col.get(num).unwrap_or(&0u16) as u32)
+        .into_iter()
+        .map(|num| num * (right_col[(num - 10000) as usize] as u32))
         .sum()
 }
 #[cfg(test)]

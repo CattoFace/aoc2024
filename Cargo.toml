@@ -3,6 +3,12 @@ name = "aoc2024"
 version = "0.1.0"
 edition = "2021"
 
+[profile.max]
+inherits = "release"
+panic = "abort"
+codegen-units = 1
+lto = true
+
 [profile.bench]
 inherits = "release"
 panic = "abort"
