@@ -158,6 +158,7 @@ pub fn part2_universal(mut input: &[u8]) -> u32 {
 #[aoc(day1, part2)]
 pub fn part2_fast(input: &[u8]) -> u32 {
     let mut left_col = Vec::<u32>::new();
+    // value type shrunk to u8 because in the real input no value repeats a huge amount of times
     let mut right_col =
         fxhash::FxHashMap::<u32, u8>::with_capacity_and_hasher(1000, Default::default());
     input.chunks(14).for_each(|line| {
