@@ -159,7 +159,7 @@ pub fn part2_universal(mut input: &[u8]) -> u32 {
 pub fn part2_fast(input: &[u8]) -> u32 {
     let mut left_col = Vec::<u32>::new();
     let mut right_col =
-        fxhash::FxHashMap::<u32, u16>::with_capacity_and_hasher(1000, Default::default());
+        fxhash::FxHashMap::<u32, u8>::with_capacity_and_hasher(1000, Default::default());
     input.chunks(14).for_each(|line| {
         let (l, r) = parse_line_fast(line);
         left_col.push(l);
@@ -167,7 +167,7 @@ pub fn part2_fast(input: &[u8]) -> u32 {
     });
     left_col
         .iter()
-        .map(|num| num * *right_col.get(num).unwrap_or(&0u16) as u32)
+        .map(|num| num * *right_col.get(num).unwrap_or(&0u8) as u32)
         .sum()
 }
 pub fn part2(input: &str) -> u32 {
