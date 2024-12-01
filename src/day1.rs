@@ -9,7 +9,7 @@ use nom::{
     character::complete::{self, newline},
     combinator::{iterator, opt},
     sequence::{separated_pair, terminated},
-    IResult,
+    AsBytes, IResult,
 };
 
 use crate::util::fast_parse;
@@ -56,7 +56,7 @@ pub fn part1_naive(input: &str) -> u32 {
 }
 #[aoc(day1, part1, universal)]
 // parses the input using hand rolled parsing
-pub fn part1(mut input: &[u8]) -> u32 {
+pub fn part1_universal(mut input: &[u8]) -> u32 {
     let mut left_col = Vec::new();
     let mut right_col = Vec::new();
     loop {
@@ -102,7 +102,9 @@ pub fn part1_fast(input: &[u8]) -> u32 {
     let (left_col, right_col) = input.chunks(14).map(parse_line_fast).unzip();
     part1_solve(left_col, right_col)
 }
-
+pub fn part1(input: &str) -> u32 {
+    part1_fast(input.as_bytes())
+}
 #[aoc(day1, part1, simd)]
 // parsing the input optimised for the real input shape
 pub fn part1_simd(input: &[u8]) -> u32 {
@@ -127,7 +129,7 @@ pub fn part2_naive(input: &str) -> u32 {
         .sum()
 }
 #[aoc(day1, part2, universal)]
-pub fn part2(mut input: &[u8]) -> u32 {
+pub fn part2_universal(mut input: &[u8]) -> u32 {
     let mut left_col = Vec::<u32>::new();
     let mut right_col =
         fxhash::FxHashMap::<u32, u16>::with_capacity_and_hasher(1000, Default::default());
@@ -167,6 +169,9 @@ pub fn part2_fast(input: &[u8]) -> u32 {
         .map(|num| num * *right_col.get(num).unwrap_or(&0u16) as u32)
         .sum()
 }
+pub fn part2(input: &str) -> u32 {
+    part2_fast(input.as_bytes())
+}
 // parsing the input optimised for the real input shape using SIMD
 #[aoc(day1, part2, simd)]
 pub fn part2_simd(input: &[u8]) -> u32 {
@@ -185,12 +190,12 @@ pub fn part2_simd(input: &[u8]) -> u32 {
 }
 #[cfg(test)]
 mod tests {
-    use crate::day1::{part1, part2};
+    use crate::day1::{part1_universal, part2_universal};
 
     #[test]
     fn sample_part1() {
         assert_eq!(
-            part1(
+            part1_universal(
                 b"3   4
 4   3
 2   5
@@ -205,7 +210,7 @@ mod tests {
     #[test]
     fn sample_part2() {
         assert_eq!(
-            part2(
+            part2_universal(
                 b"3   4
 4   3
 2   5
