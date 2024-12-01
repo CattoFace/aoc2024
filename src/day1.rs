@@ -157,7 +157,7 @@ pub fn part2_universal(mut input: &[u8]) -> u32 {
 // parsing the input optimised for the real input shape
 #[aoc(day1, part2)]
 pub fn part2_fast(input: &[u8]) -> u32 {
-    let mut left_col = Vec::<u32>::new();
+    let mut left_col = Vec::<u32>::with_capacity(1000);
     // all numbers are 10000-99999
     let mut right_col = [0u8; 90_000];
     input.chunks(14).for_each(|line| {
