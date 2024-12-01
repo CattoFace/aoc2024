@@ -158,17 +158,16 @@ pub fn part2_universal(mut input: &[u8]) -> u32 {
 #[aoc(day1, part2)]
 pub fn part2_fast(input: &[u8]) -> u32 {
     let mut left_col = Vec::<u32>::new();
-    // value type shrunk to u8 because in the real input no value repeats a huge amount of times
-    let mut right_col =
-        fxhash::FxHashMap::<u32, u8>::with_capacity_and_hasher(1000, Default::default());
+    // all numbers are 10000-99999
+    let mut right_col = [0u8; 90_000];
     input.chunks(14).for_each(|line| {
         let (l, r) = parse_line_fast(line);
         left_col.push(l);
-        right_col.entry(r).and_modify(|r| *r += 1).or_insert(1);
+        right_col[(r - 10000) as usize] += 1;
     });
     left_col
-        .iter()
-        .map(|num| num * *right_col.get(num).unwrap_or(&0u8) as u32)
+        .into_iter()
+        .map(|num| num * (right_col[(num - 10000) as usize] as u32))
         .sum()
 }
 pub fn part2(input: &str) -> u32 {
