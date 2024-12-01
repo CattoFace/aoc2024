@@ -6,6 +6,15 @@ use std::{
 use crate::util::fast_parse;
 use aoc_runner_derive::aoc;
 
+// removed nom from the project, kept use calls and parsing for reference, might restore at some point later
+// use nom::{
+//     bytes::complete::tag,
+//     character::complete::{self, newline},
+//     combinator::{iterator, opt},
+//     sequence::{separated_pair, terminated},
+//     AsBytes, IResult,
+// };
+
 // simple sort, zip, map to get the required sum(abs(a-b))
 fn part1_solve(mut left: Vec<u32>, mut right: Vec<u32>) -> u32 {
     left.sort_unstable();
