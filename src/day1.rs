@@ -73,7 +73,7 @@ pub fn part1_universal(mut input: &[u8]) -> u32 {
 fn parse_line_simd(line: &[u8]) -> (u32, u32) {
     assert!(line.len() >= 13);
     const WEIGHTS: u32x4 = u32x4::from_slice(&[10000u32, 1000u32, 100u32, 10u32]);
-    const ZERO: u32x4 = u32x4::from_slice(&[b'0' as u32; 8]);
+    const ZERO: u32x4 = u32x4::from_slice(&[b'0' as u32; 4]);
     let left_simd: u32x4 = u8x4::load_or_default(&line[..4]).cast();
     let right_simd: u32x4 = u8x4::load_or_default(&line[8..12]).cast();
     (
