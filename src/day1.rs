@@ -3,16 +3,8 @@ use std::{
     simd::{num::SimdUint, u32x8, u8x8},
 };
 
-use aoc_runner_derive::aoc;
-use nom::{
-    bytes::complete::tag,
-    character::complete::{self, newline},
-    combinator::{iterator, opt},
-    sequence::{separated_pair, terminated},
-    AsBytes, IResult,
-};
-
 use crate::util::fast_parse;
+use aoc_runner_derive::aoc;
 
 // simple sort, zip, map to get the required sum(abs(a-b))
 fn part1_solve(mut left: Vec<u32>, mut right: Vec<u32>) -> u32 {
@@ -24,23 +16,23 @@ fn part1_solve(mut left: Vec<u32>, mut right: Vec<u32>) -> u32 {
         .sum::<i32>() as u32
 }
 
-#[aoc(day1, part1, nom)]
-// parses the input using nom
-pub fn part1_nom(input: &[u8]) -> u32 {
-    let mut it = iterator(
-        input,
-        terminated(
-            separated_pair(complete::u32, tag("   "), complete::u32),
-            opt(newline),
-        ),
-    );
-    let (left, right) = it.collect::<(Vec<u32>, Vec<u32>)>();
-    debug_assert!({
-        let res: IResult<_, _> = it.finish();
-        res.is_ok()
-    });
-    part1_solve(left, right)
-}
+// #[aoc(day1, part1, nom)]
+// // parses the input using nom
+// pub fn part1_nom(input: &[u8]) -> u32 {
+//     let mut it = iterator(
+//         input,
+//         terminated(
+//             separated_pair(complete::u32, tag("   "), complete::u32),
+//             opt(newline),
+//         ),
+//     );
+//     let (left, right) = it.collect::<(Vec<u32>, Vec<u32>)>();
+//     debug_assert!({
+//         let res: IResult<_, _> = it.finish();
+//         res.is_ok()
+//     });
+//     part1_solve(left, right)
+// }
 
 #[aoc(day1, part1, naive)]
 // parses the input using naive line splitting
