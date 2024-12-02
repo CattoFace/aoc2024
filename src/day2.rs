@@ -5,9 +5,11 @@ use crate::util::fast_parse;
 pub fn part1(input: &str) -> u16 {
     part1_no_vec(input.as_bytes())
 }
+
 pub fn part2(input: &str) -> u16 {
     part2_single_pass(input.as_bytes())
 }
+
 fn check_pair(a: u8, b: u8, increasing: bool) -> bool {
     a != b && (a <= b) == increasing && a.abs_diff(b) <= 3
 }
