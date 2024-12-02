@@ -1,4 +1,5 @@
 use aoc_runner_derive::aoc;
+use tinyvec::{array_vec, ArrayVec};
 
 use crate::util::fast_parse;
 
@@ -19,7 +20,7 @@ fn check_line(nums: &[u8], increasing: bool) -> bool {
 
 // gets an input to consume and a buffer to fill with the parsed numbers, and returns the remainder
 // of the input
-fn parse_line<'a>(mut input: &'a [u8], buffer: &mut Vec<u8>) -> &'a [u8] {
+fn parse_line<'a>(mut input: &'a [u8], buffer: &mut ArrayVec<[u8; 8]>) -> &'a [u8] {
     while !input.is_empty() {
         let (num, remainder) = fast_parse::<u8>(input);
         buffer.push(num);
@@ -56,7 +57,7 @@ pub fn part1_naive(input: &str) -> u16 {
 #[aoc(day2, part1, opt)]
 pub fn part1_opt(mut input: &[u8]) -> u16 {
     let mut sum = 0u16;
-    let mut buffer = Vec::<u8>::with_capacity(16);
+    let mut buffer = array_vec!([u8; 8]);
     while !input.is_empty() {
         input = parse_line(input, &mut buffer);
         let direction = buffer[0] <= buffer[1];
@@ -197,7 +198,7 @@ fn check_line_bruteforce(nums: &[u8]) -> bool {
 #[aoc(day2, part2, opt)]
 pub fn part2_opt(mut input: &[u8]) -> u16 {
     let mut sum = 0u16;
-    let mut buffer = Vec::<u8>::with_capacity(16);
+    let mut buffer = array_vec!([u8; 8]);
     while !input.is_empty() {
         input = parse_line(input, &mut buffer);
         if check_line_bruteforce(&buffer) {
@@ -211,7 +212,7 @@ pub fn part2_opt(mut input: &[u8]) -> u16 {
 #[aoc(day2, part2, single_pass)]
 pub fn part2_single_pass(mut input: &[u8]) -> u16 {
     let mut sum = 0u16;
-    let mut buffer = Vec::<u8>::with_capacity(16);
+    let mut buffer = array_vec!([u8; 8]);
     while !input.is_empty() {
         input = parse_line(input, &mut buffer);
         if check_line_single_pass(&buffer) {
