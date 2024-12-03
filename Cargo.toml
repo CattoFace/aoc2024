@@ -26,5 +26,6 @@ debug = true
 aoc-runner = "0.3.0"
 aoc-runner-derive = "0.3.0"
 fxhash = "0.2.1"
+memchr = "2.7.4"
 nohash = "0.2.0"
 tinyvec = "1.8.0"
