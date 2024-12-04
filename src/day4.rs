@@ -39,8 +39,7 @@ fn find_surrounding_mas(input: &[u8], i: usize, line_len: usize) -> u32 {
         && input[i+line_len-1] == b'M') as u32
 }
 
-fn is_x(input: &[u8], i: usize, line_len: usize) -> bool {
-    // UPLEFT+DOWNRIGHT
+fn is_x_get(input: &[u8], i: usize, line_len: usize) -> bool {
     ((input.get(i - line_len - 1) == Some(&b'M') && input.get(i + line_len + 1) == Some(&b'S'))
         || (input.get(i - line_len - 1) == Some(&b'S') && input.get(i + line_len + 1) == Some(&b'M'))) &&
     // DOWNLEFT+UPRIGHT
@@ -48,12 +47,26 @@ fn is_x(input: &[u8], i: usize, line_len: usize) -> bool {
         || (input.get(i + line_len - 1) == Some(&b'S') && input.get(i - line_len + 1) == Some(&b'M')))
 }
 
+fn is_x_unsafe(input: &[u8], i: usize, line_len: usize) -> bool {
+    let column = i % line_len;
+    if column == 0 || column == line_len - 1 {
+        return false;
+    }
+    // unsafe allowed because the bounds were checked before, and the compiler can't see it
+    unsafe {
+        // UPLEFT+DOWNRIGHT
+        (input.get_unchecked(i - line_len - 1)+input.get_unchecked(i + line_len + 1) == (b'S'+b'M')) &&
+        // DOWNLEFT+UPRIGHT
+        (input.get_unchecked(i + line_len - 1) + input.get_unchecked(i - line_len + 1) == (b'S'+b'M'))
+    }
+}
+
 pub fn part1(input: &str) -> u32 {
     part1_naive(input.as_bytes())
 }
 
 pub fn part2(input: &str) -> u32 {
-    part2_naive(input.as_bytes())
+    part2_opt(input.as_bytes())
 }
 
 #[aoc(day4, part1, mt)]
@@ -88,13 +101,19 @@ pub fn part1_naive(input: &[u8]) -> u32 {
 #[aoc(day4, part2, naive)]
 pub fn part2_naive(input: &[u8]) -> u32 {
     let line_len = memchr::memchr(b'\n', input).unwrap() + 1;
-    // no point searching in the first and last line
-    // there's also no point searching the first and last column but that's not worth the effort to skip
-    memchr::memchr_iter(b'A', &input[line_len..input.len() - line_len])
-        .filter(|&i| is_x(input, i + line_len, line_len))
+    memchr::memchr_iter(b'A', input)
+        .filter(|&i| is_x_get(input, i, line_len))
         .count() as u32
 }
 
+#[aoc(day4, part2, opt)]
+pub fn part2_opt(input: &[u8]) -> u32 {
+    let line_len = memchr::memchr(b'\n', input).unwrap() + 1;
+    // no point searching in the first and last line and column and helps with bounds checking
+    memchr::memchr_iter(b'A', &input[line_len..input.len() - line_len])
+        .filter(|&i| is_x_unsafe(input, i + line_len, line_len))
+        .count() as u32
+}
 #[cfg(test)]
 mod tests {
     use crate::day4::{part1_naive, part2_naive};
