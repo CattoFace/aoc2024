@@ -1,3 +1,5 @@
+use core::str;
+
 use aoc_runner_derive::aoc;
 use memchr::memmem::{self, Finder};
 
@@ -12,20 +14,22 @@ pub fn part2(input: &str) -> u32 {
 
 fn fast_parse(input: &[u8]) -> (u16, &[u8]) {
     match input.first() {
-        None => (0, input),
-        Some(&i) => {
-            let i = i as u16;
+        Some(&i) if i.is_ascii_digit() => {
+            let i = (i - b'0') as u16;
             match input.get(1) {
-                None => (i, &input[1..]),
-                Some(&j) => {
-                    let j = j as u16;
+                Some(&j) if j.is_ascii_digit() => {
+                    let j = (j - b'0') as u16;
                     match input.get(2) {
-                        None => (i * 10 + j, &input[2..]),
-                        Some(&k) => (i * 100 + j * 10 + k as u16, &input[3..]),
+                        Some(&k) if k.is_ascii_digit() => {
+                            (i * 100 + j * 10 + (k - b'0') as u16, &input[3..])
+                        }
+                        _ => (i * 10 + j, &input[2..]),
                     }
                 }
+                _ => (i, &input[1..]),
             }
         }
+        _ => (0, input),
     }
 }
 
@@ -40,13 +44,13 @@ pub fn part1_naive(mut input: &[u8]) -> u32 {
             break;
         }
         let start_index = i + 4;
-        let (right_num, remainder): (u16, &[u8]) = fast_parse(&input[start_index..]);
+        let (left_num, remainder): (u16, &[u8]) = fast_parse(&input[start_index..]);
         // check for separating ','
         if remainder.len() == input.len() - start_index || remainder[0] != b',' {
             input = &remainder[1..];
             continue;
         }
-        let (left_num, remainder): (u16, &[u8]) = fast_parse(&remainder[1..]);
+        let (right_num, remainder): (u16, &[u8]) = fast_parse(&remainder[1..]);
         // check for ending ')'
         if remainder[0] == b')' {
             sum += left_num as u32 * right_num as u32;
@@ -66,12 +70,12 @@ fn sum_muls<'a>(mut input: &'a [u8], finder: &Finder) -> (u32, &'a [u8]) {
             break;
         }
         let start_index = i + 4;
-        let (right_num, remainder): (u16, &[u8]) = fast_parse(&input[start_index..]);
+        let (left_num, remainder): (u16, &[u8]) = fast_parse(&input[start_index..]);
         if remainder.len() == input.len() - start_index || remainder[0] != b',' {
             input = &remainder[1..];
             continue;
         }
-        let (left_num, remainder): (u16, &[u8]) = fast_parse(&remainder[1..]);
+        let (right_num, remainder): (u16, &[u8]) = fast_parse(&remainder[1..]);
         if remainder[0] == b')' {
             sum += left_num as u32 * right_num as u32;
         }
