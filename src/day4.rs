@@ -6,7 +6,7 @@ fn find_surrounding_mas(input: &[u8], i: usize, line_len: usize) -> u32 {
     // LEFT
     (i>=3 && &input[i-3..i]==b"SAM") as u32+
     // RIGHT
-    (i<=input.len()-3 && &input[i+1..i+4]==b"MAS") as u32+
+    (i<=input.len()-4 && &input[i+1..i+4]==b"MAS") as u32+
     // UP
     (i>=3*line_len
         && input[i-3*line_len] == b'S'
