@@ -1,6 +1,14 @@
 use aoc_runner_derive::aoc;
 use tinyvec::ArrayVec;
 
+pub fn part1(input: &str) -> u32 {
+    part1_opt(input.as_bytes())
+}
+
+pub fn part2(input: &str) -> u32 {
+    part2_single_parse(input.as_bytes())
+}
+
 fn parse_rules_vec(input: &[u8]) -> ([ArrayVec<[u8; 128]>; 100], &[u8]) {
     let mut rules: [ArrayVec<[u8; 128]>; 100] = std::array::from_fn(|_| ArrayVec::new());
     let mut size = 0usize;
@@ -110,7 +118,7 @@ pub fn part1_vec(input: &[u8]) -> u32 {
 }
 
 #[aoc(day5, part1, rewrite)]
-pub fn part1_first(input: &[u8]) -> u32 {
+pub fn part1_opt(input: &[u8]) -> u32 {
     let (rules, remainder) = parse_rules(input);
     remainder
         .split_inclusive(|&c| c == b'\n')
@@ -250,12 +258,12 @@ pub fn part2_first(input: &[u8]) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day5::{part1_first, part2_first};
+    use crate::day5::{part1_opt, part2_first};
 
     #[test]
     fn sample_part1_naive() {
         assert_eq!(
-            part1_first(
+            part1_opt(
                 b"47|53
 97|13
 97|61
