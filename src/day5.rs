@@ -4,11 +4,11 @@ use aoc_runner_derive::aoc;
 use tinyvec::ArrayVec;
 
 pub fn part1(input: &str) -> u32 {
-    part1_opt(input.as_bytes())
+    part1_sort(input.as_bytes())
 }
 
 pub fn part2(input: &str) -> u32 {
-    part2_single_parse(input.as_bytes())
+    part2_sort(input.as_bytes())
 }
 
 fn parse_rules_vec(input: &[u8]) -> ([ArrayVec<[u8; 128]>; 100], &[u8]) {
@@ -258,7 +258,7 @@ pub fn part2_single_rules(input: &[u8]) -> u32 {
 }
 
 #[aoc(day5, part2, sort)]
-pub fn part2_single_sort(input: &[u8]) -> u32 {
+pub fn part2_sort(input: &[u8]) -> u32 {
     let mut sum = 0u32;
     let (rules, mut remainder) = parse_rules(input);
     let mut numbers: ArrayVec<[u8; 64]> = ArrayVec::new();
