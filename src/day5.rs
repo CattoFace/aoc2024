@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use aoc_runner_derive::aoc;
 use tinyvec::ArrayVec;
 
@@ -67,6 +69,20 @@ fn line_predicate_vec(line: &[u8], rules: &[ArrayVec<[u8; 128]>; 100]) -> u8 {
     }
 }
 
+fn line_predicate_sort(numbers: &[u8], rules: &[[bool; 100]; 100]) -> bool {
+    numbers.is_sorted_by(|&x, &y| rules[x as usize][y as usize])
+}
+fn line_fix_sort(mut numbers: ArrayVec<[u8; 64]>, rules: &[[bool; 100]; 100]) -> u8 {
+    numbers.sort_unstable_by(|&x, &y| {
+        if rules[x as usize][y as usize] {
+            Ordering::Less
+        } else {
+            Ordering::Equal
+        }
+    });
+    numbers[numbers.len() / 2]
+}
+
 fn line_predicate2(numbers: &[u8], rules: &[[bool; 100]; 100]) -> bool {
     let mut seen = ArrayVec::<[u8; 64]>::new();
     numbers.iter().all(|&first| {
@@ -115,6 +131,34 @@ pub fn part1_vec(input: &[u8]) -> u32 {
         .split_inclusive(|&c| c == b'\n')
         .map(|line| line_predicate_vec(line, &rules) as u32)
         .sum()
+}
+
+#[aoc(day5, part1, sort)]
+pub fn part1_sort(input: &[u8]) -> u32 {
+    let mut sum = 0u32;
+    let (rules, mut remainder) = parse_rules(input);
+    let mut numbers: ArrayVec<[u8; 64]> = ArrayVec::new();
+    loop {
+        match remainder.get(2) {
+            Some(b',') => numbers.push((remainder[0] - b'0') * 10 + remainder[1] - b'0'),
+            Some(b'\n') => {
+                numbers.push((remainder[0] - b'0') * 10 + remainder[1] - b'0');
+                if line_predicate_sort(&numbers, &rules) {
+                    sum += numbers[numbers.len() / 2] as u32;
+                }
+                numbers.clear();
+            }
+            None => {
+                numbers.push((remainder[0] - b'0') * 10 + remainder[1] - b'0');
+                if line_predicate_sort(&numbers, &rules) {
+                    sum += numbers[numbers.len() / 2] as u32;
+                }
+                return sum;
+            }
+            _ => unreachable!(),
+        }
+        remainder = &remainder[3..];
+    }
 }
 
 #[aoc(day5, part1, rewrite)]
@@ -213,6 +257,33 @@ pub fn part2_single_rules(input: &[u8]) -> u32 {
         .sum()
 }
 
+#[aoc(day5, part2, sort)]
+pub fn part2_single_sort(input: &[u8]) -> u32 {
+    let mut sum = 0u32;
+    let (rules, mut remainder) = parse_rules(input);
+    let mut numbers: ArrayVec<[u8; 64]> = ArrayVec::new();
+    loop {
+        match remainder.get(2) {
+            Some(b',') => numbers.push((remainder[0] - b'0') * 10 + remainder[1] - b'0'),
+            Some(b'\n') => {
+                numbers.push((remainder[0] - b'0') * 10 + remainder[1] - b'0');
+                if !line_predicate_sort(&numbers, &rules) {
+                    sum += line_fix_sort(numbers, &rules) as u32
+                }
+                numbers.clear();
+            }
+            None => {
+                numbers.push((remainder[0] - b'0') * 10 + remainder[1] - b'0');
+                if !line_predicate_sort(&numbers, &rules) {
+                    sum += line_fix_sort(numbers, &rules) as u32
+                }
+                return sum;
+            }
+            _ => unreachable!(),
+        }
+        remainder = &remainder[3..];
+    }
+}
 #[aoc(day5, part2, single_parse)]
 pub fn part2_single_parse(input: &[u8]) -> u32 {
     let mut sum = 0u32;
