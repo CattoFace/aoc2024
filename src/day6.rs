@@ -22,6 +22,13 @@ enum Direction {
     Right = 3,
 }
 
+pub fn part1(input: &str) -> u32 {
+    part1_bitvec(input.as_bytes())
+}
+
+pub fn part2(input: &str) -> u32 {
+    part2_rayon(input.as_bytes())
+}
 #[aoc(day6, part1, bitvec)]
 pub fn part1_bitvec(input: &[u8]) -> u32 {
     let mut count = 1u32;
