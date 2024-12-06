@@ -25,6 +25,8 @@ debug = true
 [dependencies]
 aoc-runner = "0.3.0"
 aoc-runner-derive = "0.3.0"
+bitvec = "1.0.1"
 fxhash = "0.2.1"
 memchr = "2.7.4"
+rayon = "1.10.0"
 tinyvec = "1.8.0"
