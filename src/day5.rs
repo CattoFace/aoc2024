@@ -329,12 +329,12 @@ pub fn part2_first(input: &[u8]) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day5::{part1_opt, part2_first};
+    use crate::day5::part1_sort;
 
     #[test]
     fn sample_part1_naive() {
         assert_eq!(
-            part1_opt(
+            part1_sort(
                 b"47|53
 97|13
 97|61
@@ -365,25 +365,6 @@ mod tests {
 97,13,75,29,47"
             ),
             143
-        )
-    }
-
-    #[test]
-    fn sample_part2_naive() {
-        assert_eq!(
-            part2_first(
-                b"MMMSXXMASM
-MSAMXMSMSA
-AMXSXMAAMM
-MSAMASMSMX
-XMASAMXAMM
-XXAMMXXAMA
-SMSMSASXSS
-SAXAMASAAA
-MAMMMXMMMM
-MXMXAXMASX"
-            ),
-            9
         )
     }
 }

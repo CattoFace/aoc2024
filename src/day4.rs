@@ -116,7 +116,7 @@ pub fn part2_opt(input: &[u8]) -> u32 {
 }
 #[cfg(test)]
 mod tests {
-    use crate::day4::{part1_naive, part2_naive};
+    use crate::day4::{part1_naive, part2_opt};
 
     #[test]
     fn sample_part1_naive() {
@@ -140,7 +140,7 @@ MXMXAXMASX"
     #[test]
     fn sample_part2_naive() {
         assert_eq!(
-            part2_naive(
+            part2_opt(
                 b"MMMSXXMASM
 MSAMXMSMSA
 AMXSXMAAMM
