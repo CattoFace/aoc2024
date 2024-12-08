@@ -7,7 +7,7 @@ fn main() {
     let s = read_to_string("./input/2024/day8.txt").unwrap();
     let input = s.as_bytes();
     for _ in 0..1000 {
-        sum += day8::part1_first(&input[..input.len() - 1]) as u64;
+        sum += day8::part1_unique(&input[..input.len() - 1]) as u64;
         //         sum += day7::part1_first(
         //             b"190: 10 19
         // 3267: 81 40 27
