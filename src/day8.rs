@@ -51,6 +51,9 @@ impl Position {
             },
         ]
     }
+    fn get_index(self, width: i8) -> usize {
+        self.y as usize * width as usize + self.x as usize
+    }
 }
 
 pub fn part1(input: &str) -> u32 {
@@ -183,28 +186,38 @@ pub fn part1_grid_par(input: &[u8]) -> u32 {
 #[aoc(day8, part1, grid)]
 pub fn part1_grid(input: &[u8]) -> u32 {
     let mut grid = bitvec![0;input.len()];
+    let mut count = 0u32;
     let (antennas, width, height) = find_antennas(input);
-    antennas
-        .iter()
-        .flat_map(|freq| {
-            freq.iter()
-                .tuple_combinations()
-                .flat_map(|(&antenna1, &antenna2)| antenna1.resonate(antenna2))
-        })
-        .filter(|&p| {
-            if p.x >= 0 && p.x < width && p.y >= 0 && p.y < height {
-                let index = p.y as usize * width as usize + p.x as usize;
-                if !grid[index] {
-                    grid.set(index, true);
-                    true
-                } else {
-                    false
+    antennas.iter().for_each(|freq| {
+        freq.iter()
+            .tuple_combinations()
+            .for_each(|(&antenna1, &antenna2)| {
+                let [antinode1, antinode2] = antenna1.resonate(antenna2);
+                if antinode1.x >= 0
+                    && antinode1.x < width
+                    && antinode1.y >= 0
+                    && antinode1.y < height
+                {
+                    let index = antinode1.y as usize * width as usize + antinode1.x as usize;
+                    if !grid[index] {
+                        grid.set(index, true);
+                        count += 1;
+                    }
                 }
-            } else {
-                false
-            }
-        })
-        .count() as u32
+                if antinode2.x >= 0
+                    && antinode2.x < width
+                    && antinode2.y >= 0
+                    && antinode2.y < height
+                {
+                    let index = antinode2.y as usize * width as usize + antinode2.x as usize;
+                    if !grid[index] {
+                        grid.set(index, true);
+                        count += 1;
+                    }
+                }
+            })
+    });
+    count
 }
 
 #[aoc(day8, part1, unique_par)]
@@ -279,38 +292,38 @@ pub fn part2_grid_par(input: &[u8]) -> u32 {
 #[aoc(day8, part2, grid)]
 pub fn part2_grid(input: &[u8]) -> u32 {
     let mut grid: BitVec = bitvec![0;input.len()];
+    let mut count = 0u32;
     let (antennas, width, height) = find_antennas(input);
-    antennas
-        .iter()
-        .flat_map(|freq| {
-            freq.iter()
-                .tuple_combinations()
-                .flat_map(|(&antenna1, &antenna2)| {
-                    let (res1, res2) = antenna1.infinite_resonation(antenna2);
-                    [antenna1, antenna2]
-                        .into_iter()
-                        .chain(
-                            res1.take_while(|&p| {
-                                p.x >= 0 && p.x < width && p.y >= 0 && p.y < height
-                            }),
-                        )
-                        .chain(
-                            res2.take_while(|&p| {
-                                p.x >= 0 && p.x < width && p.y >= 0 && p.y < height
-                            }),
-                        )
-                })
-        })
-        .filter(|&p| {
-            let index = p.y as usize * width as usize + p.x as usize;
-            if !grid[index] {
-                grid.set(index, true);
-                true
-            } else {
-                false
-            }
-        })
-        .count() as u32
+    antennas.iter().for_each(|freq| {
+        freq.iter().for_each(|p| {
+            grid.set(p.get_index(width), true);
+        });
+        count += freq.len() as u32;
+    });
+    antennas.iter().for_each(|freq| {
+        freq.iter()
+            .tuple_combinations()
+            .for_each(|(antenna1, antenna2)| {
+                let (res1, res2) = antenna1.infinite_resonation(*antenna2);
+                res1.take_while(|&p| p.x >= 0 && p.x < width && p.y >= 0 && p.y < height)
+                    .for_each(|p| {
+                        let index = p.get_index(width);
+                        if !grid[index] {
+                            grid.set(p.get_index(width), true);
+                            count += 1;
+                        }
+                    });
+                res2.take_while(|&p| p.x >= 0 && p.x < width && p.y >= 0 && p.y < height)
+                    .for_each(|p| {
+                        let index = p.get_index(width);
+                        if !grid[index] {
+                            grid.set(p.get_index(width), true);
+                            count += 1;
+                        }
+                    });
+            })
+    });
+    count
 }
 
 #[aoc(day8, part2, unique_par)]
