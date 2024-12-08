@@ -21,6 +21,7 @@ panic = "abort"
 codegen-units = 1
 lto = true
 debug = true
+strip = false
 
 [dependencies]
 aoc-runner = "0.3.0"

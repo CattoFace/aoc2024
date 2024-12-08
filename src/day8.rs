@@ -154,7 +154,7 @@ fn find_antennas(input: &[u8]) -> ([Vec<Position>; 80], i8, i8) {
     (antennas, width as i8, height as i8)
 }
 
-#[aoc(day8, part1, grid_par)]
+// #[aoc(day8, part1, grid_par)]
 pub fn part1_grid_par(input: &[u8]) -> u32 {
     let grid = (0..input.len())
         .map(|_| AtomicBool::new(false))
@@ -189,38 +189,33 @@ pub fn part1_grid(input: &[u8]) -> u32 {
     let mut count = 0u32;
     let (antennas, width, height) = find_antennas(input);
     antennas.iter().for_each(|freq| {
-        freq.iter()
-            .tuple_combinations()
-            .for_each(|(&antenna1, &antenna2)| {
+        if freq.len() <= 1 {
+            return;
+        }
+        for (i, &antenna1) in freq[..freq.len() - 1].iter().enumerate() {
+            for &antenna2 in &freq[i + 1..] {
                 let [antinode1, antinode2] = antenna1.resonate(antenna2);
-                if antinode1.x >= 0
-                    && antinode1.x < width
-                    && antinode1.y >= 0
-                    && antinode1.y < height
-                {
+                // because of scanning order, antinode1 ,will always be above anteanna1
+                if antinode1.x >= 0 && antinode1.x < width && antinode1.y >= 0 {
                     let index = antinode1.y as usize * width as usize + antinode1.x as usize;
-                    if !grid[index] {
-                        grid.set(index, true);
-                        count += 1;
-                    }
+                    let mut cell = grid.get_mut(index).unwrap();
+                    count += !*cell as u32;
+                    *cell = true;
                 }
-                if antinode2.x >= 0
-                    && antinode2.x < width
-                    && antinode2.y >= 0
-                    && antinode2.y < height
-                {
+                // because of scanning order, antinode2 will always be below antenna1
+                if antinode2.x >= 0 && antinode2.x < width && antinode2.y < height {
                     let index = antinode2.y as usize * width as usize + antinode2.x as usize;
-                    if !grid[index] {
-                        grid.set(index, true);
-                        count += 1;
-                    }
+                    let mut cell = grid.get_mut(index).unwrap();
+                    count += !*cell as u32;
+                    *cell = true;
                 }
-            })
+            }
+        }
     });
     count
 }
 
-#[aoc(day8, part1, unique_par)]
+// #[aoc(day8, part1, unique_par)]
 pub fn part1_unique_par(input: &[u8]) -> u32 {
     let (antennas, width, height) = find_antennas(input);
     let antinodes: HashSet<Position> = antennas
@@ -235,7 +230,7 @@ pub fn part1_unique_par(input: &[u8]) -> u32 {
     antinodes.len() as u32
 }
 
-#[aoc(day8, part1, unique)]
+// #[aoc(day8, part1, unique)]
 pub fn part1_unique(input: &[u8]) -> u32 {
     let (antennas, width, height) = find_antennas(input);
     antennas
@@ -250,7 +245,7 @@ pub fn part1_unique(input: &[u8]) -> u32 {
         .count() as u32
 }
 
-#[aoc(day8, part2, grid_par)]
+// #[aoc(day8, part2, grid_par)]
 pub fn part2_grid_par(input: &[u8]) -> u32 {
     let grid = (0..input.len())
         .map(|_| AtomicBool::new(false))
@@ -295,38 +290,50 @@ pub fn part2_grid(input: &[u8]) -> u32 {
     let mut count = 0u32;
     let (antennas, width, height) = find_antennas(input);
     antennas.iter().for_each(|freq| {
-        freq.iter().for_each(|p| {
-            grid.set(p.get_index(width), true);
-        });
-        count += freq.len() as u32;
-    });
-    antennas.iter().for_each(|freq| {
-        freq.iter()
-            .tuple_combinations()
-            .for_each(|(antenna1, antenna2)| {
-                let (res1, res2) = antenna1.infinite_resonation(*antenna2);
-                res1.take_while(|&p| p.x >= 0 && p.x < width && p.y >= 0 && p.y < height)
-                    .for_each(|p| {
-                        let index = p.get_index(width);
-                        if !grid[index] {
-                            grid.set(p.get_index(width), true);
-                            count += 1;
-                        }
-                    });
-                res2.take_while(|&p| p.x >= 0 && p.x < width && p.y >= 0 && p.y < height)
-                    .for_each(|p| {
-                        let index = p.get_index(width);
-                        if !grid[index] {
-                            grid.set(p.get_index(width), true);
-                            count += 1;
-                        }
-                    });
-            })
+        if freq.len() <= 1 {
+            return;
+        }
+        for (i, &antenna1) in freq[..freq.len() - 1].iter().enumerate() {
+            let mut cell = grid.get_mut(antenna1.get_index(width)).unwrap();
+            count += !*cell as u32;
+            *cell = true;
+            drop(cell);
+            for &antenna2 in &freq[i + 1..] {
+                let x_diff = antenna1.x - antenna2.x;
+                let y_diff = antenna1.y - antenna2.y;
+                let mut antinode = Position {
+                    x: antenna1.x + x_diff,
+                    y: antenna1.y + y_diff,
+                };
+                while antinode.x >= 0 && antinode.x < width && antinode.y >= 0 {
+                    let mut cell = grid.get_mut(antinode.get_index(width)).unwrap();
+                    count += !*cell as u32;
+                    *cell = true;
+                    antinode.x += x_diff;
+                    antinode.y += y_diff;
+                }
+                let mut antinode = Position {
+                    x: antenna2.x - x_diff,
+                    y: antenna2.y - y_diff,
+                };
+                while antinode.x >= 0 && antinode.x < width && antinode.y < height {
+                    let mut cell = grid.get_mut(antinode.get_index(width)).unwrap();
+                    count += !*cell as u32;
+                    *cell = true;
+                    antinode.x -= x_diff;
+                    antinode.y -= y_diff;
+                }
+            }
+        }
+        // handle last antenna since outer loop doesn't
+        let mut cell = grid.get_mut(freq[freq.len() - 1].get_index(width)).unwrap();
+        count += !*cell as u32;
+        *cell = true;
     });
     count
 }
 
-#[aoc(day8, part2, unique_par)]
+// #[aoc(day8, part2, unique_par)]
 pub fn part2_unique_par(input: &[u8]) -> u32 {
     let (antennas, width, height) = find_antennas(input);
     let antinodes: HashSet<Position> =
@@ -351,7 +358,7 @@ pub fn part2_unique_par(input: &[u8]) -> u32 {
     antinodes.len() as u32
 }
 
-#[aoc(day8, part2, unique)]
+// #[aoc(day8, part2, unique)]
 pub fn part2_unique(input: &[u8]) -> u32 {
     let (antennas, width, height) = find_antennas(input);
     antennas
@@ -381,12 +388,12 @@ pub fn part2_unique(input: &[u8]) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day8::part1_unique;
+    use crate::day8::part1_grid;
 
     #[test]
     fn sample_part1() {
         assert_eq!(
-            part1_unique(
+            part1_grid(
                 b"..........
 ..........
 ..........
@@ -405,7 +412,7 @@ mod tests {
     #[test]
     fn sample2_part1() {
         assert_eq!(
-            part1_unique(
+            part1_grid(
                 b"..........
 ..........
 ..........
@@ -423,7 +430,7 @@ mod tests {
     #[test]
     fn sample3_part1() {
         assert_eq!(
-            part1_unique(
+            part1_grid(
                 b"............
 ........0...
 .....0......
