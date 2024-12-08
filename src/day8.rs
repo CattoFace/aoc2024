@@ -53,6 +53,14 @@ impl Position {
     }
 }
 
+pub fn part1(input: &str) -> u32 {
+    part1_grid(input.as_bytes())
+}
+
+pub fn part2(input: &str) -> u32 {
+    part2_grid(input.as_bytes())
+}
+
 #[allow(dead_code)]
 fn lookup_index(c: u8) -> usize {
     let index = c as usize;

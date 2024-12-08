@@ -11,6 +11,7 @@ pub fn part1(input: &str) -> u64 {
 pub fn part2(input: &str) -> u64 {
     part2_mt(input.as_bytes())
 }
+
 #[aoc(day7, part2, rem)]
 pub fn part2_rem(mut input: &[u8]) -> u64 {
     let mut sum = 0u64;
