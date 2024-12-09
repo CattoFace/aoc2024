@@ -5,11 +5,13 @@ use aoc_runner_derive::aoc;
 const EMPTY_FILE: u32 = u32::MAX;
 
 pub fn part1(input: &str) -> u64 {
-    part1_skip(input.as_bytes())
+    let input = input.as_bytes();
+    part1_no_parse(&input[..input.len() - 1])
 }
 
 pub fn part2(input: &str) -> u64 {
-    part2_first(input.as_bytes())
+    let input = input.as_bytes();
+    part2_first(&input[..input.len() - 1])
 }
 
 fn build_disk(input: &[u8]) -> Vec<u32> {
@@ -91,6 +93,80 @@ fn build_mini_disk(input: &[u8]) -> Vec<(u32, u8)> {
         .collect::<Vec<(u32, u8)>>();
     disk.push((last_id + 1, (input[input.len() - 1] - b'0')));
     disk
+}
+
+#[aoc(day9, part1, no_parse)]
+pub fn part1_no_parse(disk: &[u8]) -> u64 {
+    let mut read = (disk[0] - b'0') as u64;
+    let mut checksum = 0u64;
+    let mut front_index = 1u32;
+    let mut back_index = disk.len() as u32 - 1;
+    let mut front = disk[1] - b'0';
+    let mut back = disk[back_index as usize] - b'0';
+    // the body enforces the front is always empty at the start of the loop
+    loop {
+        match front.cmp(&back) {
+            // less empty than there is to fill
+            Ordering::Less => {
+                checksum += (read..read + front as u64).sum::<u64>() * (back_index / 2) as u64;
+                read += front as u64;
+                back -= front;
+                // grab a new front number
+                front_index += 1;
+                if front_index < back_index {
+                    // next is filled file
+                    front = disk[front_index as usize] - b'0';
+                    checksum += (read..read + front as u64).sum::<u64>() * (front_index / 2) as u64;
+                    read += front as u64;
+                    // next is empty
+                    front_index += 1;
+                    front = disk[front_index as usize] - b'0';
+                } else {
+                    checksum += (read..read + back as u64).sum::<u64>() * (back_index / 2) as u64;
+                    return checksum;
+                }
+            }
+            // exact size to fill
+            Ordering::Equal => {
+                checksum += (read..read + back as u64).sum::<u64>() * (back_index / 2) as u64;
+                read += back as u64;
+                // grab a new front number
+                front_index += 1;
+                if front_index < back_index {
+                    // next is filled file
+                    front = disk[front_index as usize] - b'0';
+                    checksum += (read..read + front as u64).sum::<u64>() * (front_index / 2) as u64;
+                    read += front as u64;
+                    // next is empty
+                    front_index += 1;
+                    front = disk[front_index as usize] - b'0';
+                } else {
+                    return checksum;
+                }
+                // grab a new back number, skip empty files
+                back_index -= 2;
+                if front_index < back_index {
+                    back = disk[back_index as usize] - b'0';
+                } else {
+                    return checksum;
+                }
+            }
+            // more empty than there is to fill,
+            // the only case reading a new file from the front is not needed
+            Ordering::Greater => {
+                checksum += (read..read + back as u64).sum::<u64>() * (back_index / 2) as u64;
+                read += back as u64;
+                front -= back;
+                // grab a new back number, skip empty files
+                back_index -= 2;
+                if front_index < back_index {
+                    back = disk[back_index as usize] - b'0';
+                } else {
+                    return checksum;
+                }
+            }
+        }
+    }
 }
 
 fn checksum_skip_compact(mut disk: VecDeque<(u32, u8)>) -> u64 {
@@ -213,7 +289,7 @@ fn checksum_mini(disk: &[(u32, u8)]) -> u64 {
         .1
 }
 
-// #[aoc(day9, part2, first)]
+#[aoc(day9, part2, first)]
 pub fn part2_first(input: &[u8]) -> u64 {
     let mut mini_disk = build_mini_disk(input);
     compact_mini_disk2(&mut mini_disk);
@@ -226,7 +302,7 @@ pub fn part1_skip(input: &[u8]) -> u64 {
     checksum_skip_compact(mini_disk)
 }
 
-#[aoc(day9, part1, first)]
+// #[aoc(day9, part1, first)]
 pub fn part1_first(input: &[u8]) -> u64 {
     let mut disk = build_disk(input);
     compact_disk(&mut disk);
@@ -235,11 +311,11 @@ pub fn part1_first(input: &[u8]) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use crate::day9::{part1_first, part2_first};
+    use crate::day9::{part1_no_parse, part2_first};
 
     #[test]
     fn sample_part1() {
-        assert_eq!(part1_first(b"2333133121414131402"), 1928)
+        assert_eq!(part1_no_parse(b"2333133121414131402"), 1928)
     }
 
     #[test]

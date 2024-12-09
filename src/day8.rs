@@ -57,11 +57,13 @@ impl Position {
 }
 
 pub fn part1(input: &str) -> u32 {
-    part1_grid(input.as_bytes())
+    let input = input.as_bytes();
+    part1_grid(&input[..input.len() - 1])
 }
 
 pub fn part2(input: &str) -> u32 {
-    part2_grid(input.as_bytes())
+    let input = input.as_bytes();
+    part2_grid(&input[..input.len() - 1])
 }
 
 #[allow(dead_code)]
