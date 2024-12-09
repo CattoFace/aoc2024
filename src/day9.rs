@@ -14,6 +14,9 @@ pub fn part2(input: &str) -> u64 {
     part2_first(&input[..input.len() - 1])
 }
 
+fn sum_range(first: u64, last: u64) -> u64 {
+    (first + last - 1) * (last - first) / 2
+}
 fn build_disk(input: &[u8]) -> Vec<u32> {
     let mut last_id = 0u32;
     // create disk
@@ -108,7 +111,7 @@ pub fn part1_no_parse(disk: &[u8]) -> u64 {
         match front.cmp(&back) {
             // less empty than there is to fill
             Ordering::Less => {
-                checksum += (read..read + front as u64).sum::<u64>() * (back_index / 2) as u64;
+                checksum += sum_range(read, read + front as u64) * (back_index / 2) as u64;
                 read += front as u64;
                 back -= front;
                 // grab a new front number
@@ -116,26 +119,26 @@ pub fn part1_no_parse(disk: &[u8]) -> u64 {
                 if front_index < back_index {
                     // next is filled file
                     front = disk[front_index as usize] - b'0';
-                    checksum += (read..read + front as u64).sum::<u64>() * (front_index / 2) as u64;
+                    checksum += sum_range(read, read + front as u64) * (front_index / 2) as u64;
                     read += front as u64;
                     // next is empty
                     front_index += 1;
                     front = disk[front_index as usize] - b'0';
                 } else {
-                    checksum += (read..read + back as u64).sum::<u64>() * (back_index / 2) as u64;
+                    checksum += sum_range(read, read + back as u64) * (back_index / 2) as u64;
                     return checksum;
                 }
             }
             // exact size to fill
             Ordering::Equal => {
-                checksum += (read..read + back as u64).sum::<u64>() * (back_index / 2) as u64;
+                checksum += sum_range(read, read + back as u64) * (back_index / 2) as u64;
                 read += back as u64;
                 // grab a new front number
                 front_index += 1;
                 if front_index < back_index {
                     // next is filled file
                     front = disk[front_index as usize] - b'0';
-                    checksum += (read..read + front as u64).sum::<u64>() * (front_index / 2) as u64;
+                    checksum += sum_range(read, read + front as u64) * (front_index / 2) as u64;
                     read += front as u64;
                     // next is empty
                     front_index += 1;
@@ -154,7 +157,7 @@ pub fn part1_no_parse(disk: &[u8]) -> u64 {
             // more empty than there is to fill,
             // the only case reading a new file from the front is not needed
             Ordering::Greater => {
-                checksum += (read..read + back as u64).sum::<u64>() * (back_index / 2) as u64;
+                checksum += sum_range(read, read + back as u64) * (back_index / 2) as u64;
                 read += back as u64;
                 front -= back;
                 // grab a new back number, skip empty files
@@ -282,7 +285,7 @@ fn checksum_mini(disk: &[(u32, u8)]) -> u64 {
             let new_checksum = if id == EMPTY_FILE {
                 checksum
             } else {
-                checksum + (location..new_location).sum::<u64>() * id as u64
+                checksum + sum_range(location, new_location) * id as u64
             };
             (new_location, new_checksum)
         })

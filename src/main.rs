@@ -5,9 +5,8 @@ use aoc2024::day9;
 fn main() {
     let mut sum = 0u64;
     let s = read_to_string("./input/2024/day9.txt").unwrap();
-    let input = s.as_bytes();
-    for _ in 0..1 {
-        sum += day9::part1_no_parse(b"2333133121414131402") as u64;
+    for _ in 0..10000 {
+        sum += day9::part1(&s) as u64;
         //         sum += day7::part1_first(
         //             b"190: 10 19
         // 3267: 81 40 27
