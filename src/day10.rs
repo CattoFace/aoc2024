@@ -1,5 +1,4 @@
 use bitvec::prelude::*;
-use memchr;
 
 use aoc_runner_derive::aoc;
 
