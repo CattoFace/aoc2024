@@ -87,7 +87,7 @@ fn multi_step(stone: u64, steps: u8, cache: &mut FxHashMap<(u64, u8), u64>) -> u
 fn step_grouped(mut stones: FxHashMap<u64, u64>, steps: u8) -> u64 {
     let mut next_stones = FxHashMap::<u64, u64>::default();
     for _ in 0..steps {
-        // step all stones
+        // advance all groups one step
         for (&stone, &count) in &stones {
             if stone == 0 {
                 next_stones
