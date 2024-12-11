@@ -1,7 +1,7 @@
 use std::{array::from_fn, mem::swap};
 
 use aoc_runner_derive::aoc;
-use fxhash::FxHashMap;
+use fxhash::{FxBuildHasher, FxHashMap};
 
 use crate::util::fast_parse;
 
@@ -34,7 +34,7 @@ fn step(stones: Vec<u64>) -> Vec<u64> {
     new_stones
 }
 
-fn multi_step_multicache(stone: u64, steps: u8, cache: &mut [FxHashMap<u64, u64>; 75]) -> u64 {
+fn multi_step_multicache1(stone: u64, steps: u8, cache: &mut [FxHashMap<u64, u64>; 25]) -> u64 {
     if steps == 0 {
         return 1;
     }
@@ -42,16 +42,40 @@ fn multi_step_multicache(stone: u64, steps: u8, cache: &mut [FxHashMap<u64, u64>
         *expanded_amount
     } else {
         let amount = if stone == 0 {
-            multi_step_multicache(1, steps - 1, cache)
+            multi_step_multicache1(1, steps - 1, cache)
         } else {
             let digits = stone.ilog10() + 1;
             if digits % 2 == 0 {
                 let tenpow = 10u64.pow(digits / 2);
-                let amount1 = multi_step_multicache(stone / tenpow, steps - 1, cache);
-                let amount2 = multi_step_multicache(stone % tenpow, steps - 1, cache);
+                let amount1 = multi_step_multicache1(stone / tenpow, steps - 1, cache);
+                let amount2 = multi_step_multicache1(stone % tenpow, steps - 1, cache);
                 amount1 + amount2
             } else {
-                multi_step_multicache(stone * 2024, steps - 1, cache)
+                multi_step_multicache1(stone * 2024, steps - 1, cache)
+            }
+        };
+        cache[(steps - 1) as usize].insert(stone, amount);
+        amount
+    }
+}
+fn multi_step_multicache2(stone: u64, steps: u8, cache: &mut [FxHashMap<u64, u64>; 75]) -> u64 {
+    if steps == 0 {
+        return 1;
+    }
+    if let Some(expanded_amount) = cache[(steps - 1) as usize].get(&stone) {
+        *expanded_amount
+    } else {
+        let amount = if stone == 0 {
+            multi_step_multicache2(1, steps - 1, cache)
+        } else {
+            let digits = stone.ilog10() + 1;
+            if digits % 2 == 0 {
+                let tenpow = 10u64.pow(digits / 2);
+                let amount1 = multi_step_multicache2(stone / tenpow, steps - 1, cache);
+                let amount2 = multi_step_multicache2(stone % tenpow, steps - 1, cache);
+                amount1 + amount2
+            } else {
+                multi_step_multicache2(stone * 2024, steps - 1, cache)
             }
         };
         cache[(steps - 1) as usize].insert(stone, amount);
@@ -85,7 +109,8 @@ fn multi_step(stone: u64, steps: u8, cache: &mut FxHashMap<(u64, u8), u64>) -> u
 }
 
 fn step_grouped(mut stones: FxHashMap<u64, u64>, steps: u8) -> u64 {
-    let mut next_stones = FxHashMap::<u64, u64>::default();
+    let mut next_stones =
+        FxHashMap::<u64, u64>::with_capacity_and_hasher(stones.len(), FxBuildHasher::new());
     for _ in 0..steps {
         // advance all groups one step
         for (&stone, &count) in &stones {
@@ -123,7 +148,7 @@ fn step_grouped(mut stones: FxHashMap<u64, u64>, steps: u8) -> u64 {
 
 #[aoc(day11, part1, grouped)]
 pub fn part1_grouped(mut input: &[u8]) -> u64 {
-    let mut stones = FxHashMap::<u64, u64>::default();
+    let mut stones = FxHashMap::<u64, u64>::with_capacity_and_hasher(500, FxBuildHasher::new());
     loop {
         let (num, remainder) = fast_parse(input);
         stones.entry(num).and_modify(|s| *s += 1).or_insert(1);
@@ -137,7 +162,7 @@ pub fn part1_grouped(mut input: &[u8]) -> u64 {
 
 #[aoc(day11, part2, grouped)]
 pub fn part2_grouped(mut input: &[u8]) -> u64 {
-    let mut stones = FxHashMap::<u64, u64>::default();
+    let mut stones = FxHashMap::<u64, u64>::with_capacity_and_hasher(5000, FxBuildHasher::new());
     loop {
         let (num, remainder) = fast_parse(input);
         stones.entry(num).and_modify(|s| *s += 1).or_insert(1);
@@ -151,7 +176,7 @@ pub fn part2_grouped(mut input: &[u8]) -> u64 {
 
 #[aoc(day11, part1, cached_multicache)]
 pub fn part1_cached_multicache(input: &[u8]) -> u64 {
-    stone_stepper_cached_multicache(input, 25)
+    stone_stepper_cached_multicache1(input)
 }
 
 #[aoc(day11, part1, cached)]
@@ -166,7 +191,7 @@ pub fn part1_naive(input: &[u8]) -> u64 {
 
 #[aoc(day11, part2, cached_multicache)]
 pub fn part2_cached_multicache(input: &[u8]) -> u64 {
-    stone_stepper_cached_multicache(input, 75)
+    stone_stepper_cached_multicache2(input)
 }
 
 #[aoc(day11, part2, cached)]
@@ -174,12 +199,27 @@ pub fn part2_cached(input: &[u8]) -> u64 {
     stone_stepper_cached(input, 75)
 }
 
-pub fn stone_stepper_cached_multicache(mut input: &[u8], steps: u8) -> u64 {
-    let mut cache: [FxHashMap<u64, u64>; 75] = from_fn(|_| FxHashMap::default());
+pub fn stone_stepper_cached_multicache1(mut input: &[u8]) -> u64 {
+    let mut cache: [FxHashMap<u64, u64>; 25] =
+        from_fn(|_| FxHashMap::with_capacity_and_hasher(500, FxBuildHasher::new()));
     let mut sum = 0u64;
     loop {
         let (stone, remainder) = fast_parse(input);
-        sum += multi_step_multicache(stone, steps, &mut cache);
+        sum += multi_step_multicache1(stone, 25, &mut cache);
+        if remainder.is_empty() {
+            return sum;
+        }
+        input = &remainder[1..];
+    }
+}
+
+pub fn stone_stepper_cached_multicache2(mut input: &[u8]) -> u64 {
+    let mut cache: [FxHashMap<u64, u64>; 75] =
+        from_fn(|_| FxHashMap::with_capacity_and_hasher(5000, FxBuildHasher::new()));
+    let mut sum = 0u64;
+    loop {
+        let (stone, remainder) = fast_parse(input);
+        sum += multi_step_multicache2(stone, 75, &mut cache);
         if remainder.is_empty() {
             return sum;
         }
@@ -188,7 +228,8 @@ pub fn stone_stepper_cached_multicache(mut input: &[u8], steps: u8) -> u64 {
 }
 
 pub fn stone_stepper_cached(mut input: &[u8], steps: u8) -> u64 {
-    let mut cache = FxHashMap::<(u64, u8), u64>::default();
+    let mut cache =
+        FxHashMap::<(u64, u8), u64>::with_capacity_and_hasher(150000, FxBuildHasher::new());
     let mut sum = 0u64;
     loop {
         let (stone, remainder) = fast_parse(input);
