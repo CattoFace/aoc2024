@@ -7,12 +7,12 @@ use crate::util::fast_parse;
 
 pub fn part1(input: &str) -> u64 {
     let input = input.as_bytes();
-    part1_cached(&input[..input.len() - 1])
+    part1_cached_multicache(&input[..input.len() - 1])
 }
 
 pub fn part2(input: &str) -> u64 {
     let input = input.as_bytes();
-    part2_cached(&input[..input.len() - 1])
+    part2_cached_multicache(&input[..input.len() - 1])
 }
 #[allow(dead_code)]
 fn step(stones: Vec<u64>) -> Vec<u64> {
