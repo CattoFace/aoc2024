@@ -14,6 +14,7 @@ pub fn part2(input: &str) -> u64 {
     let input = input.as_bytes();
     part2_cached_multicache(&input[..input.len() - 1])
 }
+
 #[allow(dead_code)]
 fn step(stones: Vec<u64>) -> Vec<u64> {
     let mut new_stones = Vec::<u64>::with_capacity(stones.len());
