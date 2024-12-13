@@ -29,6 +29,7 @@ where
     }
     (sum, input.len() - 1)
 }
+
 #[allow(dead_code)]
 pub fn fast_parsei<T>(input: &[u8]) -> (T, &[u8])
 where

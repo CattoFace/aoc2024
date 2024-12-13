@@ -13,12 +13,12 @@ pub fn part2(input: &str) -> i64 {
 }
 
 fn find_cost64(a_x: i64, a_y: i64, b_x: i64, b_y: i64, x: i64, y: i64) -> Option<i64> {
-    let a_presses_numerator = x * b_y - b_x * y;
-    let b_presses_numerator = a_x * y - x * a_y;
     let divisor = a_x * b_y - b_x * a_y;
     if divisor == 0 {
         return None;
     }
+    let a_presses_numerator = x * b_y - b_x * y;
+    let b_presses_numerator = a_x * y - x * a_y;
     if a_presses_numerator % divisor == 0 && b_presses_numerator % divisor == 0 {
         Some(a_presses_numerator / divisor * 3 + b_presses_numerator / divisor)
     } else {
@@ -27,12 +27,12 @@ fn find_cost64(a_x: i64, a_y: i64, b_x: i64, b_y: i64, x: i64, y: i64) -> Option
 }
 
 fn find_cost(a_x: i32, a_y: i32, b_x: i32, b_y: i32, x: i32, y: i32) -> Option<i32> {
-    let a_presses_numerator = x * b_y - b_x * y;
-    let b_presses_numerator = a_x * y - x * a_y;
     let divisor = a_x * b_y - b_x * a_y;
     if divisor == 0 {
         return None;
     }
+    let a_presses_numerator = x * b_y - b_x * y;
+    let b_presses_numerator = a_x * y - x * a_y;
     if a_presses_numerator % divisor == 0 && b_presses_numerator % divisor == 0 {
         Some(a_presses_numerator / divisor * 3 + b_presses_numerator / divisor)
     } else {
