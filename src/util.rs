@@ -30,7 +30,6 @@ where
     (sum, input.len() - 1)
 }
 
-#[allow(dead_code)]
 pub fn fast_parsei<T>(input: &[u8]) -> (T, &[u8])
 where
     T: std::ops::Add<Output = T> + std::ops::Mul<Output = T> + From<i8> + Clone + std::marker::Copy,
@@ -38,9 +37,16 @@ where
     let mut remainder = input;
     let mut sum = T::from(0i8);
     let ten: T = T::from(10i8);
+    let negative_mul = if input[0] == b'-' {
+        remainder = &remainder[1..];
+        T::from(-1)
+    } else {
+        T::from(1)
+    };
     while !remainder.is_empty() && remainder[0] >= b'0' && remainder[0] <= b'9' {
         sum = sum * ten + T::from((remainder[0] - b'0') as i8);
         remainder = &remainder[1..];
     }
-    (sum, remainder)
+
+    (sum * negative_mul, remainder)
 }
