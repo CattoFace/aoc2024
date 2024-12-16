@@ -50,3 +50,50 @@ where
 
     (sum * negative_mul, remainder)
 }
+
+#[derive(Debug)]
+pub struct MyBucketQueue<T> {
+    start: usize,
+    data: Vec<Vec<T>>,
+}
+
+impl<T> MyBucketQueue<T> {
+    pub fn new() -> MyBucketQueue<T> {
+        MyBucketQueue {
+            data: Default::default(),
+            start: 0,
+        }
+    }
+    pub fn with_capacity(capcity: usize) -> MyBucketQueue<T> {
+        MyBucketQueue {
+            data: Vec::with_capacity(capcity),
+            start: 0,
+        }
+    }
+
+    pub fn push(&mut self, key: usize, value: T) {
+        if key >= self.data.len() {
+            let missing = key - self.data.len() + 1;
+            self.data.reserve(missing);
+            for _ in 0..missing {
+                self.data.push(Default::default());
+            }
+        }
+        self.start = self.start.min(key);
+        self.data[key].push(value);
+    }
+
+    pub fn pop(&mut self) -> Option<(usize, T)> {
+        if self.data[self.start].is_empty() {
+            self.start += self.data[self.start..].iter().position(|v| !v.is_empty())?;
+        }
+        let value = self.data[self.start].pop()?;
+        Some((self.start, value))
+    }
+}
+
+impl<T> Default for MyBucketQueue<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
