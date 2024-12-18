@@ -49,6 +49,7 @@ fn can_reach_end2(open_until: [u32; SIZE * SIZE], max_threshold: u32) -> bool {
         std::mem::swap(&mut queue, &mut queue_next);
     }
 }
+
 fn can_reach_end(map: [bool; SIZE * SIZE]) -> bool {
     let mut queue = Vec::new();
     let mut queue_next = Vec::new();
@@ -133,6 +134,7 @@ fn perform_binsearch(free_until: [u32; SIZE * SIZE], mut end: u32) -> u32 {
 
 fn part2_better_inner(mut input: &[u8]) -> (usize, usize) {
     let mut map = [u32::MAX; SIZE * SIZE];
+    // used for short circuiting paths that meet an existing path with a higher min_on_path
     let mut reachable_with = [1024u32; SIZE * SIZE];
     let mut order = Vec::new();
     for i in 0u32.. {
