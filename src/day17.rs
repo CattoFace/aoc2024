@@ -2,6 +2,16 @@ use aoc_runner_derive::aoc;
 
 use crate::util::fast_parse;
 
+pub fn part1(input: &str) -> String {
+    let input = input.as_bytes();
+    part1_first(&input[..input.len() - 1])
+}
+
+pub fn part2(input: &str) -> usize {
+    let input = input.as_bytes();
+    part2_table(&input[..input.len() - 1])
+}
+
 #[aoc(day17, part1)]
 pub fn part1_first(input: &[u8]) -> String {
     String::from_utf8(part1_first_inner(input)).unwrap()
@@ -105,7 +115,7 @@ fn execute_instruction(
     instruction_pointer + 2
 }
 
-const TABLE_SIZE: usize = 2 << 11;
+const TABLE_SIZE: usize = 2 << 10;
 
 #[aoc(day17, part2, no_table)]
 pub fn part2_no_table(input: &[u8]) -> usize {

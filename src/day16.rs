@@ -11,6 +11,7 @@ pub fn part2(input: &str) -> u32 {
     let input = input.as_bytes();
     part2_first(&input[..input.len() - 1])
 }
+
 #[derive(Eq, PartialEq, PartialOrd, Ord, Debug, Copy, Clone)]
 enum Direction {
     Right = 0,
