@@ -57,6 +57,30 @@ fn count_potential_pattern_rwlock<'a>(
     ans
 }
 
+fn count_potential_pattern_rayon(
+    potential_pattern: &[u8],
+    patterns: &Vec<&[u8]>,
+    cache: &mut [Option<usize>],
+) -> usize {
+    let ans = patterns
+        .iter()
+        .map(|&pattern| {
+            if potential_pattern.starts_with(pattern) {
+                let sub_pattern = &potential_pattern[pattern.len()..];
+                if let Some(r) = cache[sub_pattern.len()] {
+                    r
+                } else {
+                    count_potential_pattern_rayon(sub_pattern, patterns, cache)
+                }
+            } else {
+                0
+            }
+        })
+        .sum();
+    cache[potential_pattern.len()] = Some(ans);
+    ans
+}
+
 fn count_potential_pattern<'a>(
     potential_pattern: &'a [u8],
     patterns: &Vec<&[u8]>,
@@ -107,6 +131,25 @@ fn verify_potential_pattern_rwlock<'a>(
         }
     });
     cache.write().unwrap().insert(potential_pattern, ans);
+    ans
+}
+
+fn verify_potential_pattern_rayon(
+    potential_pattern: &[u8],
+    patterns: &Vec<&[u8]>,
+    cache: &mut [Option<bool>],
+) -> bool {
+    let ans = patterns.iter().any(|&pattern| {
+        potential_pattern.starts_with(pattern) && {
+            let sub_pattern = &potential_pattern[pattern.len()..];
+            if let Some(r) = cache[sub_pattern.len()] {
+                r
+            } else {
+                verify_potential_pattern_rayon(sub_pattern, patterns, cache)
+            }
+        }
+    });
+    cache[potential_pattern.len()] = Some(ans);
     ans
 }
 
@@ -165,8 +208,9 @@ pub fn part1_rayon(input: &[u8]) -> usize {
     input[patterns_end + 2..]
         .par_split(|&c| c == b'\n')
         .filter(|&potential_pattern| {
-            let mut cache = Default::default();
-            verify_potential_pattern(potential_pattern, &patterns, &mut cache)
+            let mut cache = vec![None; potential_pattern.len() + 1];
+            cache[0] = Some(true);
+            verify_potential_pattern_rayon(potential_pattern, &patterns, &mut cache)
         })
         .count()
 }
@@ -178,8 +222,9 @@ pub fn part2_rayon(input: &[u8]) -> usize {
     input[patterns_end + 2..]
         .par_split(|&c| c == b'\n')
         .map(|potential_pattern| {
-            let mut cache = Default::default();
-            count_potential_pattern(potential_pattern, &patterns, &mut cache)
+            let mut cache = vec![None; potential_pattern.len() + 1];
+            cache[0] = Some(1);
+            count_potential_pattern_rayon(potential_pattern, &patterns, &mut cache)
         })
         .sum()
 }
