@@ -57,30 +57,6 @@ fn count_potential_pattern_rwlock<'a>(
     ans
 }
 
-fn count_potential_pattern_rayon(
-    potential_pattern: &[u8],
-    patterns: &Vec<&[u8]>,
-    cache: &mut [Option<usize>],
-) -> usize {
-    let ans = patterns
-        .iter()
-        .map(|&pattern| {
-            if potential_pattern.starts_with(pattern) {
-                let sub_pattern = &potential_pattern[pattern.len()..];
-                if let Some(r) = cache[sub_pattern.len()] {
-                    r
-                } else {
-                    count_potential_pattern_rayon(sub_pattern, patterns, cache)
-                }
-            } else {
-                0
-            }
-        })
-        .sum();
-    cache[potential_pattern.len()] = Some(ans);
-    ans
-}
-
 fn count_potential_pattern<'a>(
     potential_pattern: &'a [u8],
     patterns: &Vec<&[u8]>,
@@ -115,23 +91,23 @@ fn verify_potential_pattern_rwlock<'a>(
     patterns: &Vec<&[u8]>,
     cache: &RwLock<FxHashMap<&'a [u8], bool>>,
 ) -> bool {
-    if potential_pattern.is_empty() {
-        cache.write().unwrap().insert(potential_pattern, true);
-        return true;
-    }
-    let ans = patterns.iter().any(|&pattern| {
-        potential_pattern.starts_with(pattern) && {
+    for &pattern in patterns {
+        if potential_pattern.starts_with(pattern) {
+            if potential_pattern.len() == pattern.len() {
+                cache.write().unwrap().insert(potential_pattern, true);
+                return true;
+            }
             let sub_pattern = &potential_pattern[pattern.len()..];
-            let cached_res = cache.read().unwrap().get(sub_pattern).copied();
-            if let Some(r) = cached_res {
-                r
-            } else {
-                verify_potential_pattern_rwlock(sub_pattern, patterns, cache)
+            if cache.read().unwrap().get(sub_pattern) == Some(&true)
+                || verify_potential_pattern_rwlock(sub_pattern, patterns, cache)
+            {
+                cache.write().unwrap().insert(potential_pattern, true);
+                return true;
             }
         }
-    });
-    cache.write().unwrap().insert(potential_pattern, ans);
-    ans
+    }
+    cache.write().unwrap().insert(potential_pattern, false);
+    false
 }
 
 fn verify_potential_pattern_rayon(
@@ -139,18 +115,19 @@ fn verify_potential_pattern_rayon(
     patterns: &Vec<&[u8]>,
     cache: &mut [Option<bool>],
 ) -> bool {
-    let ans = patterns.iter().any(|&pattern| {
-        potential_pattern.starts_with(pattern) && {
+    for &pattern in patterns {
+        if potential_pattern.starts_with(pattern) {
             let sub_pattern = &potential_pattern[pattern.len()..];
-            if let Some(r) = cache[sub_pattern.len()] {
-                r
-            } else {
-                verify_potential_pattern_rayon(sub_pattern, patterns, cache)
+            if cache[sub_pattern.len()] == Some(true)
+                || verify_potential_pattern_rayon(sub_pattern, patterns, cache)
+            {
+                cache[potential_pattern.len()] = Some(true);
+                return true;
             }
         }
-    });
-    cache[potential_pattern.len()] = Some(ans);
-    ans
+    }
+    cache[potential_pattern.len()] = Some(false);
+    false
 }
 
 fn verify_potential_pattern<'a>(
@@ -158,23 +135,23 @@ fn verify_potential_pattern<'a>(
     patterns: &Vec<&[u8]>,
     cache: &mut FxHashMap<&'a [u8], bool>,
 ) -> bool {
-    if potential_pattern.is_empty() {
-        cache.insert(potential_pattern, true);
-        return true;
-    }
-    let ans = patterns.iter().any(|&pattern| {
-        potential_pattern.starts_with(pattern) && {
+    for &pattern in patterns {
+        if potential_pattern.starts_with(pattern) {
+            if potential_pattern.len() == pattern.len() {
+                cache.insert(potential_pattern, true);
+                return true;
+            }
             let sub_pattern = &potential_pattern[pattern.len()..];
-            let cached_res = cache.get(sub_pattern);
-            if let Some(&r) = cached_res {
-                r
-            } else {
-                verify_potential_pattern(sub_pattern, patterns, cache)
+            if cache.get(sub_pattern) == Some(&true)
+                || verify_potential_pattern(sub_pattern, patterns, cache)
+            {
+                cache.insert(potential_pattern, true);
+                return true;
             }
         }
-    });
-    cache.insert(potential_pattern, ans);
-    ans
+    }
+    cache.insert(potential_pattern, false);
+    false
 }
 
 #[aoc(day19, part2)]
@@ -216,16 +193,12 @@ pub fn part1_rayon(input: &[u8]) -> usize {
 }
 
 #[aoc(day19, part2, rayon)]
-pub fn part2_rayon(input: &[u8]) -> usize {
+pub fn part2_rayon(input: &[u8]) -> u64 {
     let patterns_end = memchr::memchr(b'\n', input).unwrap();
     let patterns = parse_available_pattern(&input[..patterns_end]);
     input[patterns_end + 2..]
         .par_split(|&c| c == b'\n')
-        .map(|potential_pattern| {
-            let mut cache = vec![None; potential_pattern.len() + 1];
-            cache[0] = Some(1);
-            count_potential_pattern_rayon(potential_pattern, &patterns, &mut cache)
-        })
+        .map(|potential_pattern| count_potential_pattern_rewrite(potential_pattern, &patterns))
         .sum()
 }
 
@@ -253,4 +226,58 @@ pub fn part2_rayon_rwlock(input: &[u8]) -> usize {
             count_potential_pattern_rwlock(potential_pattern, &patterns, &cache)
         })
         .sum()
+}
+
+#[aoc(day19, part2, rewrite)]
+pub fn part2_rewrite(input: &[u8]) -> u64 {
+    let patterns_end = memchr::memchr(b'\n', input).unwrap();
+    let patterns = parse_available_pattern(&input[..patterns_end]);
+    input[patterns_end + 2..]
+        .split(|&c| c == b'\n')
+        .map(|potential_pattern| count_potential_pattern_rewrite(potential_pattern, &patterns))
+        .sum()
+}
+
+#[aoc(day19, part1, rewrite)]
+pub fn part1_rewrite(input: &[u8]) -> usize {
+    let patterns_end = memchr::memchr(b'\n', input).unwrap();
+    let patterns = parse_available_pattern(&input[..patterns_end]);
+    input[patterns_end + 2..]
+        .split(|&c| c == b'\n')
+        .filter(|potential_pattern| verify_potential_pattern_rewrite(potential_pattern, &patterns))
+        .count()
+}
+
+fn count_potential_pattern_rewrite(potential_pattern: &[u8], patterns: &Vec<&[u8]>) -> u64 {
+    let mut reachable = vec![0u64; potential_pattern.len() + 1];
+    reachable[0] = 1;
+    for start in 0..potential_pattern.len() {
+        let reachable_current = reachable[start];
+        if reachable_current == 0 {
+            continue;
+        }
+        patterns.iter().for_each(|&p| {
+            if potential_pattern[start..].starts_with(p) {
+                reachable[start + p.len()] += reachable_current;
+            }
+        });
+    }
+    reachable[potential_pattern.len()]
+}
+
+fn verify_potential_pattern_rewrite(potential_pattern: &[u8], patterns: &Vec<&[u8]>) -> bool {
+    let mut reachable = vec![false; potential_pattern.len() + 1];
+    reachable[0] = true;
+    for start in 0..potential_pattern.len() {
+        let reachable_current = reachable[start];
+        if !reachable_current {
+            continue;
+        }
+        patterns.iter().for_each(|&p| {
+            if potential_pattern[start..].starts_with(p) {
+                reachable[start + p.len()] = true;
+            }
+        });
+    }
+    reachable[potential_pattern.len()]
 }
