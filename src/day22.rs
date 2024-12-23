@@ -14,6 +14,15 @@ use rayon::{
 
 use crate::util::fast_parse;
 
+pub fn part1(input: &str) -> u64 {
+    let input = input.as_bytes();
+    part1_simd_rayon(&input[..input.len() - 1])
+}
+
+pub fn part2(input: &str) -> u32 {
+    let input = input.as_bytes();
+    part2_table_rayon(&input[..input.len() - 1])
+}
 fn step_secret(mut secret: u32) -> u32 {
     const PRUNE: u32 = (1 << 24) - 1;
     let step1 = secret << 6;
