@@ -13,7 +13,7 @@ pub fn part1(input: &str) -> u32 {
 
 pub fn part2(input: &str) -> String {
     let input = input.as_bytes();
-    part2_brute_force(&input[..input.len() - 1])
+    part2_brute_adj(&input[..input.len() - 1])
 }
 
 fn brute_force_clique_adj(
